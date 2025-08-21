@@ -1,8 +1,11 @@
+'use client'
 import { signup } from "@/action/auth";
+import { useActionState } from "react";
 
 export function SignupForm() {
+  const [state, action, pending] = useActionState(signup, undefined)
   return (
-    <form action={signup}>
+    <form action={action}>
       <div>
         <label htmlFor="name">Name</label>
         <input id="name" name="name" placeholder="Name" />

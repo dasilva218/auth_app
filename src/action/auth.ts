@@ -1,10 +1,8 @@
 "use server"
-
 import { SignupFormSchema } from "@/lib/definitions";
 import bcrypt from "bcryptjs";
 import fs from "fs/promises";
 import path from "path";
-
 type UserType = {
   id: number;
   name: string;
@@ -24,6 +22,8 @@ export async function signup(formData: FormData) {
     throw new Error(`Validation echouée: ${validerChamp.error.message}`);
   }
 
+  const { email, name, password } = validerChamp.data;
+
   const bdPath = path.join(process.cwd(), 'src/bd/data.json')
 
   let Users: Array<UserType> = [];
@@ -36,25 +36,23 @@ export async function signup(formData: FormData) {
     await fs.mkdir(path.dirname(bdPath), { recursive: true });
   }
   // vérifier si l'utilisateur existe déjà
-  const utilisateurExistant = Users.find(user => user.email === validerChamp.data.email);
+  const utilisateurExistant = Users.find(user => user.email === email);
   if (utilisateurExistant) {
     throw new Error("Un utilisateur avec cet email existe déjà.");
   }
 
   const Salt = bcrypt.genSaltSync(10)
-  const passwordHash = bcrypt.hashSync(validerChamp.data.password, Salt)
-
+  const passwordHash = bcrypt.hashSync(password, Salt)
   // creer un nouvel utilisateur
   const nouvelUtilisateur = {
     id: Users.length + 1,
-    name: validerChamp.data.name,
-    email: validerChamp.data.email,
+    name: name,
+    email: email,
     password: passwordHash
   }
-
   // ajouter l'utilisateur à la base de données
   Users.push(nouvelUtilisateur);
   // ajouter dans le fichier DataTransfer.json
   await fs.writeFile(bdPath, JSON.stringify(Users, null, 2))
-  console.log("Nouvel utilisateur créé:", nouvelUtilisateur);
+  return {success: true, message: "Inscription réussie"};
 }
